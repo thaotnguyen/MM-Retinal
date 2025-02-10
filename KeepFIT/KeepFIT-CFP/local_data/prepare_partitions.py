@@ -20,13 +20,13 @@ from constants import *
 
 
 if not os.path.exists(PATH_DATAFRAME_PRETRAIN):
-    os.mkdir(PATH_DATAFRAME_PRETRAIN)
+    os.makedirs(PATH_DATAFRAME_PRETRAIN)
 if not os.path.exists(PATH_DATAFRAME_TRANSFERABILITY):
-    os.mkdir(PATH_DATAFRAME_TRANSFERABILITY)
+    os.makedirs(PATH_DATAFRAME_TRANSFERABILITY)
 if not os.path.exists(PATH_DATAFRAME_TRANSFERABILITY_CLASSIFICATION):
-    os.mkdir(PATH_DATAFRAME_TRANSFERABILITY_CLASSIFICATION)
+    os.makedirs(PATH_DATAFRAME_TRANSFERABILITY_CLASSIFICATION)
 if not os.path.exists(PATH_DATAFRAME_TRANSFERABILITY_SEGMENTATION):
-    os.mkdir(PATH_DATAFRAME_TRANSFERABILITY_SEGMENTATION)
+    os.makedirs(PATH_DATAFRAME_TRANSFERABILITY_SEGMENTATION)
 
 
 def adequate_01_eyepacs():
@@ -34,10 +34,11 @@ def adequate_01_eyepacs():
                  3: "severe diabetic retinopathy", 4: "proliferative diabetic retinopathy"}
     path_dataset = "01_Eyepacs/"
 
-    partitions = ["train", "valid"]
+    # partitions = ["train", "valid"]
+    partitions = ["train"]
     data = []
     for iPartition in partitions:
-        dataframe = pd.read_csv(PATH_DATASETS + path_dataset + iPartition + ".csv")
+        dataframe = pd.read_csv(PATH_DATASETS + path_dataset + iPartition + "Labels.csv")
         for iFile in range(dataframe.shape[0]):
             # print(iFile, end="\r")
             image_path = path_dataset + iPartition + '/' + dataframe["image"][iFile] + '.jpeg'
@@ -260,16 +261,17 @@ def adequate_05_1000x39():
                            '29.0.Blur fundus without PDR': 'no proliferative diabetic retinopathy',
                            '29.1.Blur fundus with suspected PDR': 'proliferative diabetic retinopathy'}
 
-    categories_test = ["0.0.Normal", "15.0.Retinitis pigmentosa", "8.MH"]
+    # categories_test = ["0.0.Normal", "15.0.Retinitis pigmentosa", "8.MH"]
+    categories_test = []
 
-    path_dataset = "1000x39/"
+    path_dataset = "05_1000x39"
     data = []
 
     categories = os.listdir(PATH_DATASETS + path_dataset)
     [categories.remove(iCategory) for iCategory in categories_test]
 
     for iCategory in categories:
-        images = os.listdir(PATH_DATASETS + path_dataset + iCategory + "/")
+        images = os.listdir(PATH_DATASETS + path_dataset + "/" + iCategory + "/")
 
         for iImage in images:
             data.append({"image": path_dataset + iCategory + "/" + iImage,
@@ -375,7 +377,7 @@ def adequate_08_odir5k():
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "08_ODIR.csv")
-    print(f'08_ODIR-5K has {len(data)} images')
+    print(f'08_ODIR-5K train has {len(data)} images')
     # Test subset
     data = []
     counter_n, counter_m, counter_c = 1, 1, 1
@@ -405,6 +407,7 @@ def adequate_08_odir5k():
                     counter_n += 1
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_TRANSFERABILITY_CLASSIFICATION + "08_ODIR200x3.csv")
+    print(f'08_ODIR-5K test has {len(data)} images')
 
 
 def adequate_09_papila():
@@ -665,9 +668,9 @@ def adequate_19_drishtigs1():
 
 
 def adequate_20_e_ophta():
-    path_dataset = "20_E-ophta/"
+    path_dataset = "20_E-ophtha/"
     labels = {"EX": "exudates", "healthy": "healthy", "MA": "microaneurysms"}
-    subpath_images = ["e_optha_EX/EX/", "e_optha_EX/healthy/", "e_optha_MA/MA/", "e_optha_MA/healthy/"]             # bug 应该是MA
+    subpath_images = ["e_ophtha_EX/EX/", "e_ophtha_EX/healthy/", "e_ophtha_MA/MA/", "e_ophtha_MA/healthy/"]             # bug 应该是MA
 
     data = []
     for iSub in subpath_images:
@@ -675,14 +678,13 @@ def adequate_20_e_ophta():
         for root, dirs, files in os.walk(PATH_DATASETS + path_dataset + iSub):
             for filename in files:
                 if filename != "Thumbs.db":
-                    print(os.path.join(root, filename))
-
                     data.append({"image": os.path.join(root, filename).replace(PATH_DATASETS, ""),
                                  "atributes": [],
                                  "categories": [finding]})
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "20_E-ophta.csv")
+    print(f'20_E-ophtha has {len(data)} images')
 
 
 def adequate_21_g1020():
@@ -704,12 +706,14 @@ def adequate_21_g1020():
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "21_G1020.csv")
+    print(f'21_G1020 has {len(data)} images')
 
 
 def adequate_22_heimed():
     path_dataset = "22_HEI-MED/"
 
     data = []
+    print(f'22_HEI-MED has {len(data)} images')
     return 1
 
 
@@ -739,6 +743,7 @@ def adequate_23_hrf():
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "23_HRF.csv")
+    print(f'23_HRF has {len(data)} images')
 
 
 def adequate_24_origa():
@@ -760,6 +765,7 @@ def adequate_24_origa():
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "24_ORIGA.csv")
+    print(f'24_ORIGA has {len(data)} images')
 
 
 def adequate_25_refuge():
@@ -772,9 +778,10 @@ def adequate_25_refuge():
     files = os.listdir(PATH_DATASETS + path_dataset + image_subpath)
 
     for iFile in files:
-        data.append({"image": path_dataset + image_subpath + iFile,
-                     "atributes": [],
-                     "categories": [labels[iFile[0]]]})
+        if iFile[0] in labels.keys():
+            data.append({"image": path_dataset + image_subpath + iFile,
+                        "atributes": [],
+                        "categories": [labels[iFile[0]]]})
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_TRANSFERABILITY_CLASSIFICATION + "25_REFUGE.csv")
@@ -783,7 +790,7 @@ def adequate_25_refuge():
 def adequate_26_roc():
     path_dataset = "26_ROC/"
 
-    files = glob.glob(PATH_DATASETS + path_dataset + "*/*.jpg")
+    files = glob.glob(PATH_DATASETS + path_dataset + "*.jpg")
     data = []
     for iFile in files:
         data.append({"image": iFile.replace(PATH_DATASETS, ""),
@@ -792,6 +799,7 @@ def adequate_26_roc():
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "26_ROC.csv")
+    print(f'26_ROC has {len(data)} images')
 
 
 def adequate_27_brset():
@@ -841,6 +849,7 @@ def adequate_27_brset():
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "27_BRSET.csv")
+    print(f'27_BRSET has {len(data)} images')
 
 
 def adequate_28_OIA():
@@ -883,6 +892,7 @@ def adequate_28_OIA():
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "28_OIA-DDR.csv")
+    print(f'28_OIA-DDR has {len(data)} images')
 
 
 def adequate_29_airogs():
@@ -892,25 +902,28 @@ def adequate_29_airogs():
 
     data = []
     for i in range(6):
-        print(i)
         files = os.listdir(PATH_DATASETS + path_dataset + str(i) + '/')
 
         for iFile in files:
             # print(iFile)
             id= ""
-            if iFile.split(".")[1] != 'db':
-                id = dataframe["challenge_id"] == iFile.split(".")[0]
+            try:
+                if iFile.split(".")[1] != 'db':
+                    id = dataframe["challenge_id"] == iFile.split(".")[0]
 
-            finding = labels[dataframe[id]["class"].values[0]]
-            image_path = path_dataset + str(i) + '/' + iFile
+                finding = labels[dataframe[id]["class"].values[0]]
+                image_path = path_dataset + str(i) + '/' + iFile
 
-            if os.path.isfile(PATH_DATASETS + image_path):
-                data.append({"image": image_path,
-                             "atributes": [],
-                             "categories": [finding]})
+                if os.path.isfile(PATH_DATASETS + image_path):
+                    data.append({"image": image_path,
+                                "atributes": [],
+                                "categories": [finding]})
+            except Exception as e:
+                print(f'Error in {iFile} with id {id} and error {e}')
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "29_AIROGS.csv")
+    print(f'29_AIROGS has {len(data)} images')
 
 
 def adequate_30_sustech():
@@ -949,6 +962,7 @@ def adequate_30_sustech():
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "30_SUSTech-SYSU.csv")
+    print(f'30_SUSTech-SYSU has {len(data)} images')
 
 
 def adequate_31_jichi():
@@ -984,6 +998,7 @@ def adequate_31_jichi():
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "31_JICHI.csv")
+    print(f'31_JICHI has {len(data)} images')
 
 
 def adequate_32_chaksu():
@@ -1020,6 +1035,7 @@ def adequate_32_chaksu():
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "32_CHAKSU.csv")
+    print(f'32_CHAKSU has {len(data)} images')
 
 
 def adequate_33_dr():
@@ -1052,6 +1068,7 @@ def adequate_33_dr():
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "33_DR1-2.csv")
+    print(f'33_DR1-2 has {len(data)} images')
 
 
 def adequate_34_cataract():
@@ -1072,6 +1089,7 @@ def adequate_34_cataract():
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "34_Cataract.csv")
+    print(f'34_Cataract has {len(data)} images')
 
 
 def adequate_35_scardat():
@@ -1095,6 +1113,7 @@ def adequate_35_scardat():
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "35_ScarDat.csv")
+    print(f'35_ScarDat has {len(data)} images')
 
 
 def adequate_36_acrima():
@@ -1116,6 +1135,7 @@ def adequate_36_acrima():
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_TRANSFERABILITY_CLASSIFICATION + "36_ACRIMA.csv")
+    print(f'36_ACRIMA has {len(data)} images')
 
 
 def adequate_37_DeepDRiD():
@@ -1159,6 +1179,7 @@ def adequate_37_DeepDRiD():
 
     df_out = pd.DataFrame(data)
     df_out.to_csv(PATH_DATAFRAME_TRANSFERABILITY_CLASSIFICATION + "37_DeepDRiD_test.csv")
+    print(f'37_DeepDRiD has {len(data)} images')
 
 
 def adequate_38_SynFundus(frac):
@@ -1224,6 +1245,7 @@ def MM_Retinal_dataset():
 
         df_out = pd.DataFrame(data)
         df_out.to_csv(PATH_DATAFRAME_PRETRAIN + "39_MM_Retinal_dataset.csv")
+        print(f'39_MM_Retinal_dataset has {len(data)} images')
 
 
 def AMD():
@@ -1354,4 +1376,43 @@ def adequate_CGI_HRDC():
     df_out.to_csv(PATH_DATAFRAME_TRANSFERABILITY_SEGMENTATION + "CGI_HRDC_Task2.csv")
 
 
-TAOP()
+adequate_01_eyepacs()
+adequate_02_messidor()
+adequate_03_idrid()
+adequate_03_idrid_segmentation()
+adequate_04_rfmid()
+adequate_05_1000x39()
+adequate_06_DEN()
+adequate_07_lag()
+adequate_08_odir5k()
+adequate_09_papila()
+adequate_10_paraguay()
+adequate_11_stare()
+adequate_12_aria()
+adequate_13_fives()
+adequate_14_agar300()
+adequate_15_aptos()
+adequate_16_fundoct()
+adequate_17_diaretdb1()
+adequate_18_drions_db()
+adequate_19_drishtigs1()
+adequate_20_e_ophta()
+adequate_21_g1020()
+adequate_22_heimed()
+adequate_23_hrf()
+adequate_24_origa()
+adequate_25_refuge()
+adequate_26_roc()
+# adequate_27_brset()
+adequate_28_OIA()
+adequate_29_airogs()
+adequate_30_sustech()
+adequate_31_jichi()
+adequate_32_chaksu()
+adequate_33_dr()
+adequate_34_cataract()
+adequate_35_scardat()
+adequate_36_acrima()
+adequate_37_DeepDRiD()
+adequate_mmac_segmentation()
+MM_Retinal_dataset()
